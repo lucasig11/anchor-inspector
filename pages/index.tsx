@@ -45,7 +45,7 @@ export default function Home() {
           >
             Menta Labs
           </Text>
-        </a>
+        </a>{" "}
       </footer>
     </>
   )

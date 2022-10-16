@@ -4,12 +4,11 @@ import { Button, Container, Flex, Text } from "@theme-ui/components"
 
 import WalletManager from "@/components/WalletManager/WalletManager"
 import { useState } from "react"
-import { CloseIcon, MenuIcon, MoonLogo, ProfileLogo, SunLogo } from "../icons"
-import { useColorMode } from "theme-ui"
+import { CloseIcon, MenuIcon } from "../icons"
+import { NavLink } from "theme-ui"
 
 const Header = () => {
   const [isMobileMenuActive, setIsMobileMenuActive] = useState(false)
-  const [colorMode, setColorMode] = useColorMode()
 
   return (
     <Flex
@@ -92,6 +91,7 @@ const Header = () => {
               },
             }}
           >
+            <NavLink href="pda">PDA Generator</NavLink>
             <Flex
               sx={{
                 alignSelf: "stretch",
@@ -113,30 +113,6 @@ const Header = () => {
                 <CloseIcon />
               </Button>
             </Flex>
-            {/* Change theme-ui color mode */}
-            <Flex
-              sx={{
-                alignItems: "center",
-                justifyContent: "center",
-                alignSelf: "stretch",
-
-                "&:hover": {
-                  borderBottomWidth: "1px",
-                  borderBottomStyle: "solid",
-                  borderBottomColor: "text",
-                },
-              }}
-            >
-              <Button
-                variant="resetted"
-                onClick={(e) => {
-                  setColorMode(colorMode === "default" ? "light" : "default")
-                }}
-              >
-                {colorMode === "default" ? <SunLogo /> : <MoonLogo />}
-              </Button>
-            </Flex>
-            {/* Finish menu items */}
             <WalletManager />
           </Flex>
           <Button
