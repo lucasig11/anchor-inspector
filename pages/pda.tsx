@@ -1,18 +1,10 @@
 /** @jsxImportSource theme-ui */
 import { Text } from "@theme-ui/components"
 import Header from "@/components/Header/Header"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { v4 as uuid } from "uuid"
 import { FiCopy, FiSave } from "react-icons/fi"
-import {
-  Button,
-  Checkbox,
-  Close,
-  Flex,
-  IconButton,
-  Input,
-  Label,
-} from "theme-ui"
+import { Button, Checkbox, Close, Flex, Input, Label } from "theme-ui"
 import { PublicKey } from "@solana/web3.js"
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey"
 import { useAddressStorage } from "@/hooks/addressStorage"
@@ -30,7 +22,7 @@ type PDA = {
 }
 
 export default function PdaGenerator() {
-  const { add, addresses } = useAddressStorage()
+  const { add } = useAddressStorage()
   const [programId, setProgramId] = useState<PublicKey | null>(null)
   const [pda, setPda] = useState<PDA | null>(null)
   const [seeds, setSeeds] = useState<Seed[]>([])
