@@ -3,11 +3,11 @@ import { Text } from "@theme-ui/components"
 import Header from "@/components/Header/Header"
 import { useCallback, useEffect, useState } from "react"
 import { v4 as uuid } from "uuid"
+import { FiCopy, FiSave } from "react-icons/fi"
 import {
   Button,
   Checkbox,
   Close,
-  CloseIcon,
   Flex,
   IconButton,
   Input,
@@ -15,6 +15,7 @@ import {
 } from "theme-ui"
 import { PublicKey } from "@solana/web3.js"
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey"
+import { useAddressStorage } from "@/hooks/addressStorage"
 
 type SeedKind = "pubkey" | "string"
 type Seed = {
@@ -29,6 +30,7 @@ type PDA = {
 }
 
 export default function PdaGenerator() {
+  const { add, addresses } = useAddressStorage()
   const [programId, setProgramId] = useState<PublicKey | null>(null)
   const [pda, setPda] = useState<PDA | null>(null)
   const [seeds, setSeeds] = useState<Seed[]>([])
@@ -93,31 +95,44 @@ export default function PdaGenerator() {
             sx={{
               width: "100%",
               alignItems: "center",
-              flexDirection: "column",
+              justifyContent: "space-around",
               marginBottom: "2rem",
             }}
           >
             <Text
               variant="secondary"
-              onClick={() => {
-                navigator.clipboard.writeText(pda.address.toBase58())
-                // setToast("Copied!")
-              }}
               sx={{
                 background: "rgba(80, 80, 80, 0.2)",
                 padding: "1rem",
                 borderRadius: "10px",
-                "&:hover": {
-                  cursor: "pointer",
-                  color: "primary",
-                  background: "rgba(80, 80, 80, 0.4)",
-                },
               }}
             >
               Address: {pda.address.toBase58()}
               <br />
               {showBump && <Text>Bump: {pda.bump}</Text>}
             </Text>
+            <FiCopy
+              size={20}
+              onClick={() =>
+                navigator.clipboard.writeText(pda.address.toBase58())
+              }
+              sx={{
+                "&:hover": {
+                  cursor: "pointer",
+                  color: "primary",
+                },
+              }}
+            />
+            <FiSave
+              size={20}
+              onClick={() => add(pda.address, pda.address.toBase58())}
+              sx={{
+                "&:hover": {
+                  cursor: "pointer",
+                  color: "primary",
+                },
+              }}
+            />
           </Flex>
         )}
 
@@ -182,13 +197,15 @@ export default function PdaGenerator() {
             Generate address
           </Button>
         </Flex>
-        <Label>
-          <Checkbox
-            onChange={() => setShowBump(!showBump)}
-            checked={showBump}
-          />
-          Show bump
-        </Label>
+        {pda && (
+          <Label>
+            <Checkbox
+              onChange={() => setShowBump(!showBump)}
+              checked={showBump}
+            />
+            Show bump
+          </Label>
+        )}
       </main>
     </>
   )
