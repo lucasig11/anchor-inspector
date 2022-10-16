@@ -91,7 +91,9 @@ const Header = () => {
               },
             }}
           >
+            <NavLink href="addressBook">Address book</NavLink>
             <NavLink href="pda">PDA Generator</NavLink>
+
             <Flex
               sx={{
                 alignSelf: "stretch",

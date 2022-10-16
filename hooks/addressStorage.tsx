@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const AddressStorageProvider: React.FC<Props> = ({ children }) => {
-  const [data, setData] = useState<Address[]>(() => {
+  const [addresses, setAddresses] = useState<Address[]>(() => {
     const keys = localStorage.getItem("@AnchorInspector:Addresses")
     if (keys) return JSON.parse(keys)
     return [] as Address[]
@@ -28,29 +28,30 @@ export const AddressStorageProvider: React.FC<Props> = ({ children }) => {
 
   const add = useCallback(
     (k: PublicKey, id?: string) => {
-      const e = data.find((e) => e.id === id)
-      if (e) {
-        e.k = k
-      } else {
-        data.push({ k, id: id || k.toBase58() })
-      }
-      setData(data)
-      console.log(data)
-      localStorage.setItem("@AnchorInspector:Addresses", JSON.stringify(data))
+      const newAddrs = addresses.filter((e) => e.id !== id)
+      newAddrs.push({ k, id: id || k.toBase58() })
+
+      localStorage.setItem(
+        "@AnchorInspector:Addresses",
+        JSON.stringify(newAddrs)
+      )
+
+      setAddresses(newAddrs)
     },
-    [data]
+    [addresses]
   )
 
   const remove = useCallback(
     (id: string) => {
-      setData(data.filter((d) => d.id !== id))
+      const data = addresses.filter((a) => a.id !== id)
       localStorage.setItem("@AnchorInspector:Addresses", JSON.stringify(data))
+      setAddresses(data)
     },
-    [data]
+    [addresses]
   )
 
   return (
-    <StorageContext.Provider value={{ addresses: data, add, remove }}>
+    <StorageContext.Provider value={{ addresses, add, remove }}>
       {children}
     </StorageContext.Provider>
   )
