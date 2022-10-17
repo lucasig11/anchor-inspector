@@ -5,19 +5,32 @@ import { useAddressStorage } from "@/hooks/addressStorage"
 import { FiCopy, FiEdit, FiPlus, FiSave, FiTrash } from "react-icons/fi"
 import { useCallback, useState } from "react"
 import { PublicKey } from "@solana/web3.js"
+
 export default function AddressBook() {
   const { addresses, add, remove } = useAddressStorage()
-  const [newAddress, setNewAddress] = useState<string | null>(null)
-  const [identifier, setIdentifier] = useState<string | null>(null)
+  const [newAddress, setNewAddress] = useState<string>("")
+  const [identifier, setIdentifier] = useState<string>("")
 
   const handleAddAddress = useCallback(() => {
     try {
       const address = new PublicKey(newAddress)
       add(address, identifier)
+      setNewAddress("")
+      setIdentifier("")
     } catch (err) {
       console.log(err)
     }
   }, [add, identifier, newAddress])
+
+  const handleEditAddress = useCallback(
+    (address: string, id: string) => {
+      remove(id)
+      setNewAddress(address)
+      setIdentifier(address === id ? "" : id)
+    },
+    [remove]
+  )
+
   return (
     <>
       <Header />
@@ -44,13 +57,15 @@ export default function AddressBook() {
         >
           <Input
             m={2}
-            placeholder="Address"
-            onChange={(e) => setNewAddress(e.target.value)}
+            placeholder="Identifier (optional)"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
           />
           <Input
             m={2}
-            placeholder="Identifier (optional)"
-            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Address"
+            value={newAddress}
+            onChange={(e) => setNewAddress(e.target.value)}
           />
           <Button m={2} py={0} variant="secondary" onClick={handleAddAddress}>
             <FiPlus
@@ -129,7 +144,7 @@ export default function AddressBook() {
                 },
               }}
             >
-              <FiEdit />
+              <FiEdit onClick={() => handleEditAddress(k.toString(), id)} />
               <FiCopy
                 onClick={() => navigator.clipboard.writeText(k.toString())}
               />
