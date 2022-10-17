@@ -1,67 +1,56 @@
 /** @jsxImportSource theme-ui */
-import { Text } from "@theme-ui/components"
-import Header from "@/components/Header/Header"
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { v4 as uuid } from "uuid"
 import { FiCopy, FiSave } from "react-icons/fi"
-import { Button, Checkbox, Close, Flex, Input, Label } from "theme-ui"
+import { Button, Checkbox, Close, Flex, Label } from "theme-ui"
+import { Text } from "@theme-ui/components"
 import { PublicKey } from "@solana/web3.js"
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey"
+import { FormHandles } from "@unform/core"
+
+import Header from "@/components/Header/Header"
 import { useAddressStorage } from "@/hooks/addressStorage"
+import Input from "@/components/Input"
+import { Form } from "@unform/web"
+import parseSeed from "utils/parseSeeds"
 
-type SeedKind = "pubkey" | "string"
-type Seed = {
-  id: string
-  raw: Buffer
-  kind: SeedKind
-}
-
-type PDA = {
+interface PDA {
   address: PublicKey
   bump: number
 }
 
+type SeedIndex = `seed_${string}`
+interface GeneratePdaData {
+  programId: string
+  [k: SeedIndex]: string
+}
+
 export default function PdaGenerator() {
   const { add } = useAddressStorage()
-  const [programId, setProgramId] = useState<PublicKey | null>(null)
+  const formRef = useRef<FormHandles>(null)
   const [pda, setPda] = useState<PDA | null>(null)
-  const [seeds, setSeeds] = useState<Seed[]>([])
+  const [seeds, setSeeds] = useState<string[]>([])
   const [showBump, setShowBump] = useState<boolean>(false)
 
-  const handleChangeSeed = useCallback(
-    (id: string, value: string) => {
-      const seed = seeds.find((s) => s.id === id)
-      if (!seed) return
-      try {
-        const p = new PublicKey(value)
-        seed.raw = p.toBuffer()
-        seed.kind = "pubkey"
-        // TODO: convert to JSON values (number/BN, array, objects etc.)
-      } catch {
-        seed.raw = Buffer.from(value)
-        seed.kind = "string"
-      }
-      setSeeds(seeds)
-    },
-    [seeds]
-  )
-
-  const handleChangeProgramId = useCallback((value: string) => {
+  const handleSubmit = useCallback((data: GeneratePdaData) => {
     try {
-      const pk = new PublicKey(value)
-      setProgramId(pk)
-    } catch {}
-  }, [])
+      formRef.current?.setErrors({})
 
-  const handleGenerateAddress = useCallback(() => {
-    const seedsRaw = seeds.map(({ raw }) => raw)
-    if (!programId) {
-      // setError("Invalid program ID.")
-      return
+      const programId = new PublicKey(data.programId)
+      const seeds = Object.entries(data)
+        .filter(([s]) => s.includes("seed"))
+        .map(([_, v]) => parseSeed(v))
+
+      const [address, bump] = findProgramAddressSync(
+        seeds.map((s) => s.data),
+        programId
+      )
+
+      setPda({ address, bump })
+    } catch (err) {
+      console.log(err)
     }
-    const [address, bump] = findProgramAddressSync(seedsRaw, programId)
-    setPda({ address, bump })
-  }, [seeds, programId])
+  }, [])
 
   return (
     <>
@@ -128,67 +117,48 @@ export default function PdaGenerator() {
           </Flex>
         )}
 
-        <Input
-          placeholder="Program ID"
-          onChange={(e) => handleChangeProgramId(e.target.value)}
-          sx={{
-            margin: "1rem",
-          }}
-        />
+        <Form ref={formRef} onSubmit={handleSubmit}>
+          <Input mb={2} placeholder="Program ID" name="programId" />
 
-        {seeds.map(({ id }) => (
-          <Flex
-            key={id}
-            sx={{
-              alignItems: "center",
-              justifyContent: "flex-end",
-              width: "100%",
-            }}
-          >
-            <Input
-              placeholder="Seed"
-              onChange={(e) => handleChangeSeed(id, e.target.value)}
+          {seeds.map((id) => (
+            <Flex
+              key={id}
               sx={{
-                marginY: "1rem",
-                paddingRight: "3.7rem",
+                alignItems: "center",
+                justifyContent: "flex-end",
               }}
-            />
-            <Close
-              sx={{
-                padding: 0,
-                margin: ".2rem",
-                position: "absolute",
-                "&:hover": {
-                  cursor: "pointer",
-                  color: "primary",
-                },
-              }}
-              onClick={() => setSeeds(seeds.filter((s) => s.id !== id))}
-            />
+            >
+              <Input placeholder="Seed" name={`seed_${id}`} my={1} pr={4} />
+              <Close
+                p={0}
+                m={0.2}
+                sx={{
+                  position: "absolute",
+                  "&:hover": {
+                    cursor: "pointer",
+                    color: "primary",
+                  },
+                }}
+                onClick={() => setSeeds(seeds.filter((s) => s !== id))}
+              />
+            </Flex>
+          ))}
+
+          <Flex>
+            <Button
+              m={3}
+              variant="secondary"
+              onClick={() => setSeeds([...seeds, uuid()])}
+            >
+              Add new seed
+            </Button>
+
+            <Button type="submit" variant="secondary" m={3}>
+              Generate address
+            </Button>
           </Flex>
-        ))}
+        </Form>
 
-        <Flex>
-          <Button
-            variant="secondary"
-            sx={{ margin: "3rem" }}
-            onClick={() => {
-              setSeeds([
-                ...seeds,
-                { id: uuid(), raw: Buffer.from(""), kind: "string" },
-              ])
-            }}
-          >
-            Add new seed
-          </Button>
-          <Button
-            variant="secondary"
-            sx={{ margin: "3rem" }}
-            onClick={() => handleGenerateAddress()}
-          >
-            Generate address
-          </Button>
-        </Flex>
         {pda && (
           <Label>
             <Checkbox
