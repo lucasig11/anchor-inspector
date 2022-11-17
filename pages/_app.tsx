@@ -11,6 +11,7 @@ import withGA from "next-ga"
 
 import defaultTheme from "../styles/theme"
 import { AddressStorageProvider } from "@/hooks/addressStorage"
+import { IdlProvider } from "@/hooks/idl"
 
 const WalletProvider = dynamic(
   () => import("@/components/WalletProvider/WalletProvider"),
@@ -32,7 +33,9 @@ function App(props: AppProps) {
 
       <WalletProvider>
         <AddressStorageProvider>
-          <Component {...pageProps} />
+          <IdlProvider>
+            <Component {...pageProps} />
+          </IdlProvider>
         </AddressStorageProvider>
       </WalletProvider>
     </ThemeProvider>
